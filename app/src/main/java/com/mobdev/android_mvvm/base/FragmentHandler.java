@@ -25,16 +25,28 @@ public class FragmentHandler {
         }
     }
 
-    boolean onBack(boolean isBack) {
+    void onBack() {
+        if (mCurrentFragment instanceof BaseNavigationFragment && ((BaseNavigationFragment)mCurrentFragment).isBackable() ) {
+            ((BaseNavigationFragment) mCurrentFragment).onBack();
+        }
+        else if (_mFragmentStack != null && _mFragmentStack.size() > 1) {
+            if (mCurrentFragment instanceof BaseNavigationFragment) {
+                ((BaseNavigationFragment) mCurrentFragment).popFragment();
+            }
+            popFragment();
+        }
+    }
+
+    boolean isBackable() {
         if (_mFragmentStack == null) {
             return false;
         }
 
         if (_mFragmentStack.size() > 1) {
-            if (isBack) {
-                popFragment();
-            }
             return true;
+        }
+        else if (mCurrentFragment instanceof BaseNavigationFragment) {
+            return ((BaseNavigationFragment) mCurrentFragment).isBackable();
         }
         return false;
     }
@@ -102,6 +114,7 @@ public class FragmentHandler {
 
         FragmentTransaction transaction = fragmentManager.beginTransaction();
         if (mCurrentFragment != null) {
+            mCurrentFragment.onStop();
             transaction.setCustomAnimations(R.anim.slide_left_in, R.anim.slide_left_out);
             Fragment currentFragment = fragmentManager.findFragmentByTag(_mFragmentStack.peek());
             transaction.hide(currentFragment);
@@ -116,19 +129,21 @@ public class FragmentHandler {
         mCurrentFragment = fragment;
     }
 
-    private void popFragment() {
-        if (_mFragmentStack.size() > 1) {
+    void popFragment() {
+        if (_mFragmentStack.size() > 0) {
             FragmentTransaction transaction = fragmentManager.beginTransaction();
             Fragment currentFragment = fragmentManager.findFragmentByTag(_mFragmentStack.pop());
-            Fragment fragment = fragmentManager.findFragmentByTag(_mFragmentStack.peek());
+            Fragment fragment = _mFragmentStack.size() > 0 ? fragmentManager.findFragmentByTag(_mFragmentStack.peek()) : null;
             transaction.setCustomAnimations(R.anim.slide_right_in, R.anim.slide_right_out);
             transaction.remove(currentFragment);
-            transaction.show(fragment);
-            transaction.commit();
-
             mCurrentFragment.clear();
-            mCurrentFragment = (BaseFragment) fragment;
-
+            mCurrentFragment = null;
+            if (fragment != null) {
+                transaction.show(fragment);
+                mCurrentFragment = (BaseFragment) fragment;
+                fragment.onStart();
+            }
+            transaction.commit();
         }
     }
 

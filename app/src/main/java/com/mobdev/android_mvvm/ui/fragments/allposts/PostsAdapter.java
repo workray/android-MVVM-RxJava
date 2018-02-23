@@ -32,17 +32,25 @@ public class PostsAdapter extends RecyclerView.Adapter<PostsViewHolder> {
         notifyDataSetChanged();
     }
 
-    public PublishSubject<PostItemViewModel> getViewClickedOvservable() {
+    void clear() {
+        items.clear();
+        items = null;
+        mViewClickSubject = null;
+    }
+
+    PublishSubject<PostItemViewModel> getViewClickedOvservable() {
         return mViewClickSubject;
     }
+
     @Override
     public PostsViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         LayoutInflater inflater = (LayoutInflater) parent.getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        assert inflater != null;
         PostsRowLayoutBinding binding = DataBindingUtil.inflate(inflater, R.layout.posts_row_layout, parent, false);
         PostsViewHolder viewHolder = new PostsViewHolder(binding);
         RxView.clicks(viewHolder.itemView)
                 .takeUntil(RxView.detaches(parent))
-                .map(o -> items.get(viewHolder.getAdapterPosition()))
+                .map(o -> items.get(viewHolder.getLayoutPosition()))
                 .subscribe(mViewClickSubject);
         return viewHolder;
     }
@@ -50,6 +58,10 @@ public class PostsAdapter extends RecyclerView.Adapter<PostsViewHolder> {
     @Override
     public void onBindViewHolder(PostsViewHolder holder, int position) {
         holder.update(items.get(position));
+//        RxView.clicks(holder.itemView)
+//                .takeUntil(holder.itemView.getParent())
+//                .map(o -> items.get(position))
+//                .subscribe(mViewClickSubject);
     }
 
     @Override

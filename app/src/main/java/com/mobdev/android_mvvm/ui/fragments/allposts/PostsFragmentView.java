@@ -12,4 +12,5 @@ public interface PostsFragmentView extends IView {
     void showLoadingPullToRefresh(boolean isShow);
     void init();
     void load(List<PostItemViewModel> items);
+    void toPost(PostItemViewModel item);
 }

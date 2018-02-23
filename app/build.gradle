@@ -21,6 +21,7 @@ android {
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary= true
 
+        buildConfigField 'boolean', 'IS_LOGGING',   'true'
         buildConfigField 'String', 'END_POINT',     '"https://jsonplaceholder.typicode.com"'
     }
     buildTypes {

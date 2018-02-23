@@ -7,6 +7,7 @@ import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
+import io.reactivex.subjects.PublishSubject;
 
 /**
  * Created by mobdev125 on 2/20/18.
@@ -21,15 +22,6 @@ public class PostsFragmentViewModel extends BaseViewModel<PostsFragmentView> {
     }
 
     void transform(Input input) {
-        addSubscription(input.empty
-                .observeOn(Schedulers.computation())
-                .filter(aBoolean -> aBoolean)
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(aBoolean -> {
-                            view.init();
-                            getPosts();
-                        }
-                        , throwable -> view.error(throwable)));
 
         addSubscription(input.triggered
                 .subscribeOn(AndroidSchedulers.mainThread())
@@ -41,6 +33,10 @@ public class PostsFragmentViewModel extends BaseViewModel<PostsFragmentView> {
                             view.showLoadingPullToRefresh(false);
                             view.error(throwable);
                         }));
+
+        addSubscription(input.itemClick
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(postItemViewModel -> view.toPost(postItemViewModel)));
     }
 
     private void getPosts() {
@@ -66,7 +62,7 @@ public class PostsFragmentViewModel extends BaseViewModel<PostsFragmentView> {
     }
 
     static class Input {
-        Observable<Boolean> empty;
         Observable<Boolean> triggered;
+        Observable<PostItemViewModel> itemClick;
     }
 }

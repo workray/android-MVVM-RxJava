@@ -11,14 +11,11 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.jakewharton.rxbinding2.support.v4.widget.RxSwipeRefreshLayout;
-import com.jakewharton.rxbinding2.support.v7.widget.RxActionMenuView;
-import com.jakewharton.rxbinding2.support.v7.widget.RxRecyclerView;
-import com.jakewharton.rxbinding2.support.v7.widget.RxRecyclerViewAdapter;
-import com.jakewharton.rxbinding2.widget.RxAdapterView;
 import com.mobdev.android_mvvm.R;
 import com.mobdev.android_mvvm.base.BaseFragment;
 import com.mobdev.android_mvvm.databinding.FragmentPostsBinding;
 import com.mobdev.android_mvvm.domain.usecases.DomainPostsUseCase;
+import com.mobdev.android_mvvm.ui.fragments.template.TemplateFragment;
 
 import java.util.Collections;
 import java.util.List;
@@ -52,6 +49,16 @@ public class PostsFragment extends BaseFragment<FragmentPostsBinding, PostsFragm
         layoutManager = new LinearLayoutManager(getContext());
     }
 
+    @Override
+    public void onDestroy() {
+        binding.postsRecyclerView.setLayoutManager(null);
+        binding.postsRecyclerView.setAdapter(null);
+        if (adapter != null) {
+            adapter.clear();
+            adapter = null;
+        }
+        super.onDestroy();
+    }
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
@@ -70,19 +77,27 @@ public class PostsFragment extends BaseFragment<FragmentPostsBinding, PostsFragm
 
     @Override
     public void bindViewModel() {
-        /* Input */
-        Observable<Boolean> empty = Observable.create(emitter -> emitter.onNext(adapter == null));
 
+        init();
+
+        /* Input */
+        Observable<Boolean> empty = Observable.create(emitter -> emitter.onNext(isEmpty()));
         Observable<Boolean> pullToRefresh = RxSwipeRefreshLayout.refreshes(binding.postsSwipeRefreshLayout).map(ignored -> true);
 
-
         PostsFragmentViewModel.Input input = new PostsFragmentViewModel.Input();
-        input.empty = empty;
-        input.triggered = pullToRefresh;
+        input.triggered = Observable.merge(empty, pullToRefresh);
+        input.itemClick = adapter.getViewClickedOvservable();
 
         viewModel.transform(input);
     }
 
+    boolean isEmpty() {
+        if (adapter == null || adapter.getItemCount() == 0) {
+            showLoadingPullToRefresh(true);
+            return true;
+        }
+        return false;
+    }
 
     @Override
     public void showLoadingPullToRefresh(boolean isShow) {
@@ -95,14 +110,24 @@ public class PostsFragment extends BaseFragment<FragmentPostsBinding, PostsFragm
             binding.postsRecyclerView.setLayoutManager(layoutManager);
         }
 
-        adapter = new PostsAdapter(Collections.emptyList());
-        binding.postsRecyclerView.setAdapter(adapter);
+        if (adapter == null) {
+            adapter = new PostsAdapter(Collections.emptyList());
+        }
 
-        showLoadingPullToRefresh(true);
+        if (binding.postsRecyclerView.getAdapter() == null) {
+            binding.postsRecyclerView.setAdapter(adapter);
+            showLoadingPullToRefresh(true);
+        }
     }
 
     @Override
     public void load(List<PostItemViewModel> items) {
         adapter.setItems(items);
+    }
+
+    @Override
+    public void toPost(PostItemViewModel item) {
+        TemplateFragment fragment = TemplateFragment.newInstance("Post Details");
+        navigationFragment.pushFragment(fragment);
     }
 }

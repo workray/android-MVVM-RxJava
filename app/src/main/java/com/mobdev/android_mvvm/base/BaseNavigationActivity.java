@@ -10,6 +10,7 @@ import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
+import android.util.Log;
 import android.view.View;
 
 /**
@@ -23,8 +24,9 @@ public abstract class BaseNavigationActivity<B extends ViewDataBinding, T extend
 
         @Override
         public void onClick(View v) {
-            if (navigationFragment != null) {
-                navigationFragment.onBack(true);
+            if (navigationFragment != null && navigationFragment.isBackable()) {
+                navigationFragment.onBack();
+                syncDrawerToggleState();
             }
         }
     };
@@ -35,7 +37,8 @@ public abstract class BaseNavigationActivity<B extends ViewDataBinding, T extend
             return;
         }
 
-        if (navigationFragment.onBack(false)) {
+        Log.e("Activity", "syncDrawerToggleState");
+        if (navigationFragment.isBackable()) {
             drawerToggle.setDrawerIndicatorEnabled(false);
             drawerToggle.setToolbarNavigationClickListener(navigationBackPressListener);
         } else {
@@ -94,13 +97,15 @@ public abstract class BaseNavigationActivity<B extends ViewDataBinding, T extend
     public void onBackPressed() {
 
         if (sendBackPressToDrawer()) {
+            syncDrawerToggleState();
             return;
         }
         if (sendBackPressToFragmentOnTop()) {
+            syncDrawerToggleState();
             return;
         }
 
-        super.onBackPressed();
+        finish();
     }
 
     public void addFragment(BaseNavigationFragment fragment) {
@@ -116,17 +121,18 @@ public abstract class BaseNavigationActivity<B extends ViewDataBinding, T extend
         } else {
             Fragment fragment1 = getSupportFragmentManager().findFragmentByTag(tag);
             if (fragment1 != null && fragment1.isAdded()) {
-                transaction.hide(navigationFragment);
                 transaction.show(fragment1);
             }
             else {
-                transaction.replace(getContentFrameLayoutId(), fragment, tag);
+                transaction.add(getContentFrameLayoutId(), fragment, tag);
                 transaction.addToBackStack(null);
             }
+            transaction.hide(navigationFragment);
         }
         transaction.commit();
 
         navigationFragment = fragment;
+        onBackStackChanged();
     }
 
     private boolean sendBackPressToDrawer() {
@@ -139,7 +145,12 @@ public abstract class BaseNavigationActivity<B extends ViewDataBinding, T extend
     }
 
     private boolean sendBackPressToFragmentOnTop() {
-        return navigationFragment != null && navigationFragment.onBack(true);
+        Log.e("Activity", "sendBackPressToFragmentOnTop");
+        if (navigationFragment != null && navigationFragment.isBackable()) {
+            navigationFragment.onBack();
+            return true;
+        }
+        return false;
     }
 
     protected abstract int getContentFrameLayoutId();

@@ -2,13 +2,13 @@ package com.mobdev.android_mvvm.base;
 
 import android.databinding.DataBindingUtil;
 import android.databinding.ViewDataBinding;
-import android.os.Build;
 import android.os.Bundle;
-import android.support.v4.BuildConfig;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
+
+import com.mobdev.android_mvvm.BuildConfig;
 
 /**
  * Created by mobdev125 on 2/15/18.
@@ -25,8 +25,8 @@ public abstract class BaseFragment<B extends ViewDataBinding, T extends BaseView
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
-        if (BuildConfig.DEBUG) {
-            Log.i(getTag(), "onCreate");
+        if (BuildConfig.IS_LOGGING) {
+            Log.d(getTag(), "onCreate");
         }
     }
 
@@ -47,8 +47,8 @@ public abstract class BaseFragment<B extends ViewDataBinding, T extends BaseView
     @Override
     public void onStart() {
         super.onStart();
-        if (BuildConfig.DEBUG) {
-            Log.i(getTag(), "onStart");
+        if (BuildConfig.IS_LOGGING) {
+            Log.d(getTag(), "onStart");
         }
         bindViewModel();
     }
@@ -56,8 +56,8 @@ public abstract class BaseFragment<B extends ViewDataBinding, T extends BaseView
     @Override
     public void onStop() {
         super.onStop();
-        if (BuildConfig.DEBUG) {
-            Log.i(getTag(), "onStop");
+        if (BuildConfig.IS_LOGGING) {
+            Log.d(getTag(), "onStop");
         }
         if (viewModel != null) {
             viewModel.clearSubscriptions();
@@ -67,15 +67,15 @@ public abstract class BaseFragment<B extends ViewDataBinding, T extends BaseView
     @Override
     public void onDestroy() {
         super.onDestroy();
-        if (BuildConfig.DEBUG) {
-            Log.i(getTag(), "onDestory");
+        if (BuildConfig.IS_LOGGING) {
+            Log.d(getTag(), "onDestory");
         }
         clear();
     }
 
     public void clear() {
-        if (BuildConfig.DEBUG) {
-            Log.i(getTag(), "clear");
+        if (BuildConfig.IS_LOGGING) {
+            Log.d(getTag(), "clear");
         }
         navigationFragment = null;
         binding = null;
